@@ -12,7 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
-@ToString(of = {"id", "name", "lastname", "addresses"})
 @EqualsAndHashCode(of = "id")
 public class Client {
 
@@ -33,6 +32,9 @@ public class Client {
     )
     private List<Address> addresses = new ArrayList<>();
 
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Invoice> invoices = new ArrayList<>();
+
     // Métodos de conveniencia
     public void addAddress(Address address) {
         addresses.add(address);
@@ -41,5 +43,50 @@ public class Client {
     public void removeAddress(Address address) {
         addresses.remove(address);
     }
+
+    public void addInvoice(Invoice invoice) {
+        invoices.add(invoice);
+        invoice.setClient(this); // 🔥 Mantiene ambos lados sincronizados
+    }
+
+    public void removeInvoice(Invoice invoice) {
+        invoices.remove(invoice);
+        invoice.setClient(null);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Client{id=").append(id)
+                .append(", name='").append(name).append('\'')
+                .append(", lastname='").append(lastname).append('\'');
+
+        // Direcciones
+        if (addresses != null && !addresses.isEmpty()) {
+            sb.append(", addresses=[");
+            addresses.forEach(addr -> sb.append(addr.toString()).append(", "));
+            sb.setLength(sb.length() - 2); // quitar última coma
+            sb.append("]");
+        } else {
+            sb.append(", addresses=[]");
+        }
+
+        // Facturas (solo mostramos descripción y total)
+        if (invoices != null && !invoices.isEmpty()) {
+            sb.append(", invoices=[");
+            invoices.forEach(inv ->
+                    sb.append("{desc='").append(inv.getDescription())
+                            .append("', total=").append(inv.getTotal()).append("}, "));
+            sb.setLength(sb.length() - 2);
+            sb.append("]");
+        } else {
+            sb.append(", invoices=[]");
+        }
+
+        sb.append('}');
+        return sb.toString();
+    }
+
+
 
 }

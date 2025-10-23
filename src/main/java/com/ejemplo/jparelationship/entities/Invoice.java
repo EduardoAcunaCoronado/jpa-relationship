@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @Getter
 @Setter
-@ToString(of = {"id", "description", "total", "client"})
+@ToString(of = {"id", "description", "total"})
 @EqualsAndHashCode(of = "id")
 public class Invoice {
 
@@ -22,7 +22,7 @@ public class Invoice {
     private Double total;
 
     @ManyToOne
-    //@JoinColumn(name = "id_cliente_temp")
+    @JoinColumn(name = "client_id")
     private Client client;
 
 }

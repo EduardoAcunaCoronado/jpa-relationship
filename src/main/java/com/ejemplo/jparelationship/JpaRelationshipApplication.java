@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @SpringBootApplication
@@ -30,13 +31,13 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        removeAddressFindById();
+        oneToManyInvoiceBidirectional();
     }
 
     @Transactional
     public void manyToOne() throws Exception {
         System.out.println("Creando un nuevo cliente con nombre 'John' y apellido 'Doe'");
-        Client client = new Client(null, "John", "Doe", new ArrayList<>());
+        Client client = new Client(null, "John", "Doe", new ArrayList<>(), new ArrayList<>());
         System.out.println("Guardando el cliente en la base de datos");
         clientRepository.save(client);
 
@@ -73,7 +74,7 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     @Transactional
     public void oneToMany() throws Exception {
-        Client client = new Client(null, "Fran", "Moras", new ArrayList<>());
+        Client client = new Client(null, "Fran", "Moras", new ArrayList<>(), new ArrayList<>());
 
         client.getAddresses().add(new Address(null, "Calle Los Milanos", 6));
         client.getAddresses().add(new Address(null, "Calle Cuartel", 5));
@@ -101,7 +102,7 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     @Transactional
     public void removeAddress() throws Exception {
-        Client client = new Client(null, "Fran", "Moras", new ArrayList<>());
+        Client client = new Client(null, "Fran", "Moras", new ArrayList<>(), new ArrayList<>());
 
         client.getAddresses().add(new Address(null, "Calle Los Milanos", 6));
         client.getAddresses().add(new Address(null, "Calle Cuartel", 5));
@@ -148,6 +149,33 @@ public class JpaRelationshipApplication implements CommandLineRunner {
             }
         });
     }
+
+    @Transactional
+    public void oneToManyInvoiceBidirectional() {
+        Client client = new Client();
+        client.setName("Fran");
+        client.setLastname("Moras");
+
+        Invoice invoice1 = new Invoice();
+        invoice1.setDescription("Compra 1");
+        invoice1.setTotal(100.0);
+
+        Invoice invoice2 = new Invoice();
+        invoice2.setDescription("Compra 2");
+        invoice2.setTotal(200.0);
+
+        // Usamos los métodos convenientes
+        client.addInvoice(invoice1);
+        client.addInvoice(invoice2);
+
+        System.out.println(client);
+
+        Client clientDb = clientRepository.save(client);
+
+        System.out.println("✅ Cliente y facturas guardados correctamente");
+        System.out.println(clientDb);
+    }
+
 
 
 }
