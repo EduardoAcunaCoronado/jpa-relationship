@@ -30,7 +30,7 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        removeAddress();
+        removeAddressFindById();
     }
 
     @Transactional
@@ -117,6 +117,36 @@ public class JpaRelationshipApplication implements CommandLineRunner {
             System.out.println(clientDb);
         });
 
+    }
+
+    @Transactional
+    public void removeAddressFindById() throws Exception {
+        System.out.println("Buscando cliente con ID 2 en la base de datos");
+        Optional<Client> optionalClient = clientRepository.findById(2L);
+
+        System.out.println("Verificando si el cliente existe en la base de datos");
+        optionalClient.ifPresent(client -> {
+            // Si el cliente no tiene direcciones, las creamos
+            if (client.getAddresses().isEmpty()) {
+                Address address1 = new Address(null, "Calle Los Milanos", 6);
+                Address address2 = new Address(null, "Calle Cuartel", 5);
+                client.setAddresses(Arrays.asList(address1, address2));
+                clientRepository.save(client);
+                System.out.println("Direcciones creadas");
+                // Ahora buscamos nuevamente el cliente para obtener las direcciones con ID
+                Optional<Client> optionalClientDb = clientRepository.findOne(2L);
+                optionalClientDb.ifPresent(clientDb -> {
+                    System.out.println("Cliente antes de eliminar dirección: " + clientDb);
+                    // Eliminamos la dirección por índice (por ejemplo, la segunda dirección)
+                    if (clientDb.getAddresses().size() > 1) {
+                        clientDb.removeAddress(clientDb.getAddresses().get(1));
+                        Client clientDb2 = clientRepository.save(clientDb);
+                        System.out.println("Muestro el cliente guardado después de eliminar dirección");
+                        System.out.println(clientDb2);
+                    }
+                });
+            }
+        });
     }
 
 
