@@ -30,24 +30,37 @@ public class JpaRelationshipApplication implements CommandLineRunner {
     }
 
     public void manyToOne() throws Exception {
+        System.out.println("Creando un nuevo cliente con nombre 'John' y apellido 'Doe'");
         Client client = new Client(null, "John", "Doe");
+        System.out.println("Guardando el cliente en la base de datos");
         clientRepository.save(client);
 
+        System.out.println("Creando una nueva factura con descripción 'Compra' y total 1.5");
         Invoice invoice = new Invoice(null, "Compra", 1.5, null);
+        System.out.println("Asociando el cliente a la factura");
         invoice.setClient(client);
+        System.out.println("Guardando la factura en la base de datos");
         Invoice invoiceDb = invoiceRepository.save(invoice);
+        System.out.println("Mostrando la factura guardada:");
         System.out.println(invoiceDb);
 
     }
 
     public void manyToOneFindById() throws Exception {
+        System.out.println("Buscando cliente con ID 1 en la base de datos");
         Optional<Client> optionalClient = clientRepository.findById(1L);
 
+        System.out.println("Verificando si el cliente existe en la base de datos");
         if(optionalClient.isPresent()) {
+            System.out.println("Obteniendo el cliente del Optional");
             Client client = optionalClient.orElseThrow();
+            System.out.println("Creando una nueva factura con descripción 'Compra' y total 1.5");
             Invoice invoice = new Invoice(null, "Compra", 1.5, null);
+            System.out.println("Asociando el cliente encontrado a la factura");
             invoice.setClient(client);
+            System.out.println("Guardando la factura en la base de datos");
             Invoice invoiceDb = invoiceRepository.save(invoice);
+            System.out.println("Mostrando la factura guardada:");
             System.out.println(invoiceDb);
         }
     }
