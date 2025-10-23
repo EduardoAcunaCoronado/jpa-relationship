@@ -1,5 +1,6 @@
 package com.ejemplo.jparelationship;
 
+import com.ejemplo.jparelationship.entities.Address;
 import com.ejemplo.jparelationship.entities.Client;
 import com.ejemplo.jparelationship.entities.Invoice;
 import com.ejemplo.jparelationship.repositories.ClientRepository;
@@ -8,7 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 
 @SpringBootApplication
@@ -26,12 +30,13 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        manyToOneFindById();
+        oneToManyFindById();
     }
 
+    @Transactional
     public void manyToOne() throws Exception {
         System.out.println("Creando un nuevo cliente con nombre 'John' y apellido 'Doe'");
-        Client client = new Client(null, "John", "Doe");
+        Client client = new Client(null, "John", "Doe", new ArrayList<>());
         System.out.println("Guardando el cliente en la base de datos");
         clientRepository.save(client);
 
@@ -46,6 +51,7 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     }
 
+    @Transactional
     public void manyToOneFindById() throws Exception {
         System.out.println("Buscando cliente con ID 1 en la base de datos");
         Optional<Client> optionalClient = clientRepository.findById(1L);
@@ -65,7 +71,31 @@ public class JpaRelationshipApplication implements CommandLineRunner {
         }
     }
 
-    public void manyToMany() throws Exception {
+    public void oneToMany() throws Exception {
+        Client client = new Client(null, "Fran", "Moras", new ArrayList<>());
+
+        client.getAddresses().add(new Address(null, "Calle Los Milanos", 6));
+        client.getAddresses().add(new Address(null, "Calle Cuartel", 5));
+
+        clientRepository.save(client);
+
+        System.out.println(client);
 
     }
+
+    public void oneToManyFindById() throws Exception {
+        Optional<Client> optionalClient = clientRepository.findById(1L);
+
+        optionalClient.ifPresent(client -> {
+            client.setAddresses(Arrays.asList(
+                new Address(null, "Calle Los Milanos", 6),
+                new Address(null, "Calle Cuartel", 5)
+            ));
+            Client clientDb = clientRepository.save(client);
+            System.out.println(clientDb);
+        });
+
+    }
+
+
 }
