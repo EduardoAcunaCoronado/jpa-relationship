@@ -10,6 +10,7 @@ import lombok.*;
 @Getter
 @Setter
 @ToString(of = {"id", "street", "number"})
+@EqualsAndHashCode(of = "id")
 public class Address {
 
     @Id

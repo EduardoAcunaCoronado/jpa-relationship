@@ -10,6 +10,7 @@ import lombok.*;
 @Getter
 @Setter
 @ToString(of = {"id", "description", "total", "client"})
+@EqualsAndHashCode(of = "id")
 public class Invoice {
 
     @Id

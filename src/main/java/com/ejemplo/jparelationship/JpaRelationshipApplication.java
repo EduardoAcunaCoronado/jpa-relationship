@@ -30,7 +30,7 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        oneToManyFindById();
+        removeAddress();
     }
 
     @Transactional
@@ -71,6 +71,7 @@ public class JpaRelationshipApplication implements CommandLineRunner {
         }
     }
 
+    @Transactional
     public void oneToMany() throws Exception {
         Client client = new Client(null, "Fran", "Moras", new ArrayList<>());
 
@@ -83,6 +84,7 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     }
 
+    @Transactional
     public void oneToManyFindById() throws Exception {
         Optional<Client> optionalClient = clientRepository.findById(1L);
 
@@ -92,6 +94,26 @@ public class JpaRelationshipApplication implements CommandLineRunner {
                 new Address(null, "Calle Cuartel", 5)
             ));
             Client clientDb = clientRepository.save(client);
+            System.out.println(clientDb);
+        });
+
+    }
+
+    @Transactional
+    public void removeAddress() throws Exception {
+        Client client = new Client(null, "Fran", "Moras", new ArrayList<>());
+
+        client.getAddresses().add(new Address(null, "Calle Los Milanos", 6));
+        client.getAddresses().add(new Address(null, "Calle Cuartel", 5));
+
+        clientRepository.save(client);
+
+        System.out.println(client);
+
+        Optional<Client> optionalClient = clientRepository.findById(3L);
+        optionalClient.ifPresent(c -> {
+            c.getAddresses().remove(1);
+            Client clientDb = clientRepository.save(c);
             System.out.println(clientDb);
         });
 
