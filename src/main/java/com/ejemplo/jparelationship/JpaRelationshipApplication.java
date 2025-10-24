@@ -11,10 +11,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @SpringBootApplication
 public class JpaRelationshipApplication implements CommandLineRunner {
@@ -31,13 +28,13 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        oneToManyInvoiceBidirectional();
+        oneToManyInvoiceBidirectionalFindById();
     }
 
     @Transactional
     public void manyToOne() throws Exception {
         System.out.println("Creando un nuevo cliente con nombre 'John' y apellido 'Doe'");
-        Client client = new Client(null, "John", "Doe", new ArrayList<>(), new ArrayList<>());
+        Client client = new Client(null, "John", "Doe", new HashSet<>(), new HashSet<>());
         System.out.println("Guardando el cliente en la base de datos");
         clientRepository.save(client);
 
@@ -74,7 +71,7 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     @Transactional
     public void oneToMany() throws Exception {
-        Client client = new Client(null, "Fran", "Moras", new ArrayList<>(), new ArrayList<>());
+        Client client = new Client(null, "Fran", "Moras", new HashSet<>(), new HashSet<>());
 
         client.getAddresses().add(new Address(null, "Calle Los Milanos", 6));
         client.getAddresses().add(new Address(null, "Calle Cuartel", 5));
@@ -90,10 +87,8 @@ public class JpaRelationshipApplication implements CommandLineRunner {
         Optional<Client> optionalClient = clientRepository.findById(1L);
 
         optionalClient.ifPresent(client -> {
-            client.setAddresses(Arrays.asList(
-                new Address(null, "Calle Los Milanos", 6),
-                new Address(null, "Calle Cuartel", 5)
-            ));
+            client.addAddress(new Address(null, "Calle 10", 10));
+            client.addAddress(new Address(null, "Calle 11", 11));
             Client clientDb = clientRepository.save(client);
             System.out.println(clientDb);
         });
@@ -102,7 +97,7 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     @Transactional
     public void removeAddress() throws Exception {
-        Client client = new Client(null, "Fran", "Moras", new ArrayList<>(), new ArrayList<>());
+        Client client = new Client(null, "Fran", "Moras", new HashSet<>(), new HashSet<>());
 
         client.getAddresses().add(new Address(null, "Calle Los Milanos", 6));
         client.getAddresses().add(new Address(null, "Calle Cuartel", 5));
@@ -131,16 +126,17 @@ public class JpaRelationshipApplication implements CommandLineRunner {
             if (client.getAddresses().isEmpty()) {
                 Address address1 = new Address(null, "Calle Los Milanos", 6);
                 Address address2 = new Address(null, "Calle Cuartel", 5);
-                client.setAddresses(Arrays.asList(address1, address2));
+                client.addAddress(address1);
+                client.addAddress(address2);
                 clientRepository.save(client);
                 System.out.println("Direcciones creadas");
                 // Ahora buscamos nuevamente el cliente para obtener las direcciones con ID
-                Optional<Client> optionalClientDb = clientRepository.findOne(2L);
+                Optional<Client> optionalClientDb = clientRepository.findOneWithAddresses(2L);
                 optionalClientDb.ifPresent(clientDb -> {
                     System.out.println("Cliente antes de eliminar dirección: " + clientDb);
                     // Eliminamos la dirección por índice (por ejemplo, la segunda dirección)
                     if (clientDb.getAddresses().size() > 1) {
-                        clientDb.removeAddress(clientDb.getAddresses().get(1));
+                        clientDb.removeAddress(address2);
                         Client clientDb2 = clientRepository.save(clientDb);
                         System.out.println("Muestro el cliente guardado después de eliminar dirección");
                         System.out.println(clientDb2);
@@ -152,30 +148,46 @@ public class JpaRelationshipApplication implements CommandLineRunner {
 
     @Transactional
     public void oneToManyInvoiceBidirectional() {
-        Client client = new Client();
-        client.setName("Fran");
-        client.setLastname("Moras");
+        Client client = new Client(null, "Fran", "Moras", new HashSet<>(), new HashSet<>());
 
-        Invoice invoice1 = new Invoice();
-        invoice1.setDescription("Compra 1");
-        invoice1.setTotal(100.0);
+        // Crear facturas de forma más compacta
+        List<Invoice> invoices = List.of(
+                new Invoice(null, "Compra 1", 100.0, client),
+                new Invoice(null, "Compra 2", 200.0, client)
+        );
 
-        Invoice invoice2 = new Invoice();
-        invoice2.setDescription("Compra 2");
-        invoice2.setTotal(200.0);
+        // Añadirlas usando el método helper
+        invoices.forEach(client::addInvoice);
 
-        // Usamos los métodos convenientes
-        client.addInvoice(invoice1);
-        client.addInvoice(invoice2);
+        // Guardar el cliente (propagará las facturas si cascade = CascadeType.ALL)
+        Client savedClient = clientRepository.save(client);
 
-        System.out.println(client);
-
-        Client clientDb = clientRepository.save(client);
-
-        System.out.println("✅ Cliente y facturas guardados correctamente");
-        System.out.println(clientDb);
+        // Logs más informativos y ligeros
+        System.out.println(savedClient);
     }
 
+    @Transactional
+    public void oneToManyInvoiceBidirectionalFindById() {
+        Optional<Client> optionalClient = clientRepository.findOneWithInvoices(1L);
 
+        optionalClient.ifPresent(client -> {
+            // Crear facturas de forma más compacta
+            Set<Invoice> invoices = new HashSet<>();
+            invoices.add(new Invoice(null, "Compra 1", 100.0, client));
+            invoices.add(new Invoice(null, "Compra 2", 200.0, client));
+
+            // Añadirlas usando el método helper
+            client.addInvoice(new Invoice(null, "Compra 1", 100.0, client));
+            client.addInvoice(new Invoice(null, "Compra 2", 200.0, client));
+
+            // Guardar el cliente (propagará las facturas si cascade = CascadeType.ALL)
+            Client savedClient = clientRepository.save(client);
+
+            // Logs más informativos y ligeros
+            System.out.println(savedClient);
+        });
+
+
+    }
 
 }

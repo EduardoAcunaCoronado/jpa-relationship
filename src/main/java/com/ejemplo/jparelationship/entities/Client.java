@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "clients")
@@ -30,10 +32,10 @@ public class Client {
         inverseJoinColumns = @JoinColumn(name = "id_direcciones"),
         uniqueConstraints = @UniqueConstraint(columnNames = {"id_direcciones"})
     )
-    private List<Address> addresses = new ArrayList<>();
+    private Set<Address> addresses = new HashSet<>();
 
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Invoice> invoices = new ArrayList<>();
+    private Set<Invoice> invoices = new HashSet<>();
 
     // Métodos de conveniencia
     public void addAddress(Address address) {
